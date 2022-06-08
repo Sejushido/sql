@@ -1,0 +1,87 @@
+--Kod dla Tabeli kategorie_biletow
+
+CREATE OR ALTER VIEW kategorie_biletow_view AS SELECT id_kategorii ,Typ_ulgi, Maksymalny_wiek, Minimalny_wiek FROM kategorie_biletow ;
+CREATE OR ALTER PROCEDURE wyswietlDostepneKategorieBiletow 
+AS SELECT * FROM kategorie_biletow_view GO;
+
+CREATE OR ALTER PROCEDURE dodajKategorieBiletow @Id_kategori INT, @Typ_ulgi VARCHAR(45), @Maksymalny_wiek INT, @Minimalny_wiek INT 
+AS INSERT INTO kategorie_biletow (id_kategorii, Typ_ulgi, Maksymalny_wiek, Minimalny_wiek) 
+VALUES (@Id_kategori, @Typ_ulgi, @Maksymalny_wiek, @Minimalny_wiek) GO;
+
+EXEC  dodajKategorieBiletow @Id_kategori=1, @Typ_ulgi = 'Studencki', @Maksymalny_wiek=26, @Minimalny_wiek=18;
+EXEC  dodajKategorieBiletow @Id_kategori=2, @Typ_ulgi = 'Uczniowski', @Maksymalny_wiek=18, @Minimalny_wiek=8;
+EXEC wyswietlDostepneKategorieBiletow;
+
+
+--Kod dla Tabeli wydarzenia
+CREATE OR ALTER VIEW dostepne_wydarzenia_view AS SELECT Lokalizacja, Data_wydarzenia, Czas_trwania, Liczba_miejsc FROM Wydarzenia;
+CREATE OR ALTER PROCEDURE wyswietlWydarzeniaPoDacie @Data_wydarzenia DATETIME 
+AS Select * FROM dostepne_wydarzenia_view WHERE Data_wydarzenia = @Data_wydarzenia;
+
+CREATE OR ALTER PROCEDURE dodajWydarzenie @Id_wydarzenie INT,@Lokalizacja VARCHAR(45),@Data_wydarzenia DATETIME, @Czas_trwania VARCHAR(45),
+    @Miejsce_ograniczone TINYINT,@Liczba_miejsc INT,@Status_imprezy VARCHAR(45),@Podstawowa_cena DECIMAL, @Id_organizatora INT 
+AS INSERT INTO Wydarzenia (Id_wydarzenie, Lokalizacja, Data_wydarzenia, Czas_trwania, Miejsce_ograniczone,
+    Liczba_miejsc, Status_imprezy, Podstawowa_cena, Id_organizatora)
+VALUES (@Id_wydarzenie, @Lokalizacja, @Data_wydarzenia, @Czas_trwania, @Miejsce_ograniczone, @Liczba_miejsc, @Status_imprezy, @Podstawowa_cena, @Id_organizatora) GO;
+
+EXEC dodajWydarzenie @Id_wydarzenie = 1, @Lokalizacja = 'Warszawa', @Data_wydarzenia = '2022-07-01', @Czas_trwania = 100, @Miejsce_ograniczone = 1,
+@Liczba_miejsc = 100, @Status_imprezy = 'W przyszlosci', @Podstawowa_cena = 50, @Id_organizatora = 1;
+EXEC wyswietlWydarzeniaPoDacie @Data_wydarzenia = '2022-07-01';
+
+--Kod dla Tabeli klienci 
+CREATE OR ALTER VIEW wyswietl_klientow_view AS SELECT Imie, Nazwisko, Data_urodzenia FROM Klienci;
+CREATE OR ALTER PROCEDURE wyswietlKlientow AS SELECT * FROM wyswietl_klientow_view;
+
+CREATE OR ALTER PROCEDURE dodajKlienta @Id_klient INT, @Imie VARCHAR(45), @Nazwisko VARCHAR(45), @Data_urodzenia DATE,
+    @Miasto VARCHAR(45),@Ulica VARCHAR(45),@nr_domu VARCHAR(45), @nr_mieszkania VARCHAR(45) 
+AS INSERT INTO Klienci (Id_klient, Imie, Nazwisko, Data_urodzenia, Miasto, Ulica, nr_domu, nr_mieszkania) 
+VALUES (@Id_klient, @Imie , @Nazwisko ,@Data_urodzenia ,@Miasto ,@Ulica ,@nr_domu, @nr_mieszkania);
+EXEC dodajKlienta @Id_klient = 5, @Imie = Jan, @Nazwisko = 'Polak', @Data_urodzenia = '1998-05-20',
+    @Miasto = 'Wrocław', @Ulica = 'Legionów', @nr_domu = 50, @nr_mieszkania = 20;
+EXEC wyswietlKlientow;
+
+
+--Kod dla Tabeli Organizatorzy
+REATE OR ALTER VIEW wyswietl_organizatorow_view AS SELECT * FROM Organizatorzy;
+CREATE OR ALTER PROCEDURE wyswieltOrganizatorow AS SELECT * FROM wyswietl_organizatorow_view;
+
+CREATE OR ALTER PROCEDURE dodajOrganizatora @Id_organizatora INT, @Nazwa_firmy VARCHAR(45), @Ulica VARCHAR(45), 
+    @Miasto VARCHAR(45),@Nr_budynku VARCHAR(45),@adres_email VARCHAR(45), @nr_kontaktowy VARCHAR(45)
+AS INSERT INTO Organizatorzy (Id_organizatora, Nazwa_firmy, Ulica, Miasto, Nr_budynku, adres_email, nr_kontaktowy)
+VALUES (@Id_organizatora, @Nazwa_firmy, @Ulica, @Miasto, @Nr_budynku, @adres_email, @nr_kontaktowy) GO;
+EXEC dodajOrganizatora @Id_organizatora=1, @Nazwa_firmy = 'POLFESTIWAL', @Ulica='Warszawska', @Miasto='Szczecin',
+    @Nr_budynku='5', @adres_email='pol@festiwal.pl', @nr_kontaktowy='555666777';
+EXEC wyswieltOrganizatorow;
+
+--Kod dla Tabeli Rezerwacje
+CREATE OR ALTER PROCEDURE wyswietlRezerwacje AS SELECT * from wyswietl_rezerwacje_view;
+CREATE OR ALTER PROCEDURE wyswietlRezerwacjePoId @Id_rezerwacji INT 
+AS SELECT * from wyswietl_rezerwacje_view WHERE Id_rezerwacji = @Id_rezerwacji;
+CREATE OR ALTER PROCEDURE dodajRezerwacje @Id_rezerwacji INT, @id_klienta INT, @id_kategorii INT,
+    @rodzaj_miejsca VARCHAR(45),@nr_miejsca VARCHAR(45), @status_rezerwacji VARCHAR(45), @id_wydarzenia INT 
+    AS
+    BEGIN
+        DECLARE @imie VARCHAR(45);
+        DECLARE @nazwisko VARCHAR(45);
+    Select @imie = [imie], @nazwisko = [nazwisko] FROM Klienci WHERE Id_klient = @id_klienta;
+    INSERT INTO Rezerwacje (Id_rezerwacji, id_klienta, imie, nazwisko, id_kategorii, rodzaj_miejsca, nr_miejsca, status_rezerwacji, id_wydarzenia) 
+        VALUES (@Id_rezerwacji, @id_klienta, @imie, @nazwisko, @id_kategorii, @rodzaj_miejsca, @nr_miejsca, @status_rezerwacji, @id_wydarzenia);
+END
+
+EXEC dodajRezerwacje @Id_rezerwacji = 1, @id_klienta = 1, @id_kategorii = 1, @rodzaj_miejsca = 1,
+    @nr_miejsca = 10, @status_rezerwacji = 'NIE_OPLACONA', @id_wydarzenia = 1
+EXEC wyswietlRezerwacje;
+
+--Kod dla tabeli Sprzedaz 
+CREATE OR ALTER VIEW wyswietl_sprzedaz_view AS Select * FROM Sprzedaż;
+CREATE OR ALTER PROCEDURE wyswietlSprzedaz AS Select * FROM wyswietl_sprzedaz_view;
+CREATE OR ALTER PROCEDURE wyswietlNieoplacone AS SELECT * FROM wyswietl_sprzedaz_view 
+    WHERE Status_zamowienia = 'NIE_OPŁACONE';
+
+CREATE OR ALTER PROCEDURE dodajSprzedaz @Id_Sprzedazy INT, @Id_rezerwacji INT, @Rodzaj_dystrybucji VARCHAR(45), @Status_zamowienia VARCHAR(45)
+AS INSERT INTO Sprzedaż (Id_Sprzedazy, Id_rezerwacji, Rodzaj_dystrybucji, Status_zamowienia)
+VALUES (@Id_Sprzedazy, @Id_rezerwacji, @Rodzaj_dystrybucji, @Status_zamowienia);
+
+exec dodajSprzedaz @Id_Sprzedazy = 1, @Id_rezerwacji = 1, @Rodzaj_dystrybucji = 1, @Status_zamowienia = 'NIE_OPŁACONE';
+exec wyswietlNieoplacone;
+
